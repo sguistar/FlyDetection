@@ -1,0 +1,378 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Yolov10目标检测和追踪</string>
+  </property>
+  <property name="windowIcon">
+   <iconset theme="applications-development">
+    <normaloff>C:/Users/seanl/.designer/backup</normaloff>C:/Users/seanl/.designer/backup</iconset>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <widget class="QWidget" name="verticalLayoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>271</width>
+      <height>551</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <item>
+      <widget class="QGroupBox" name="groupBox_settings">
+       <property name="contextMenuPolicy">
+        <enum>Qt::NoContextMenu</enum>
+       </property>
+       <property name="title">
+        <string>设置</string>
+       </property>
+       <widget class="QLabel" name="label_select_model">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>20</y>
+          <width>54</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>选择模型</string>
+        </property>
+       </widget>
+       <widget class="QComboBox" name="comboBox_select_model">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>40</y>
+          <width>111</width>
+          <height>22</height>
+         </rect>
+        </property>
+        <property name="editable">
+         <bool>true</bool>
+        </property>
+        <item>
+         <property name="text">
+          <string>yolov8l.pt</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>yolov8m.pt</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>yolov8n.pt</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>yolov8s.pt</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>yolov8x.pt</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>yolov10b.pt</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>yolov10l.pt</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>yolov10m.pt</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>yolov10n.pt</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>yolov10s.pt</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>yolov10x.pt</string>
+         </property>
+        </item>
+       </widget>
+       <widget class="QSlider" name="horizontalSlider_adjust_confidence">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>110</y>
+          <width>160</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="maximum">
+         <number>1</number>
+        </property>
+        <property name="singleStep">
+         <number>1</number>
+        </property>
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="tickPosition">
+         <enum>QSlider::TicksBelow</enum>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_confidence">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>80</y>
+          <width>54</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>置信度</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_confidence_num">
+        <property name="geometry">
+         <rect>
+          <x>60</x>
+          <y>130</y>
+          <width>54</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>0</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+       <widget class="QDial" name="dial_detection_font_setting">
+        <property name="geometry">
+         <rect>
+          <x>50</x>
+          <y>170</y>
+          <width>71</width>
+          <height>81</height>
+         </rect>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_detection_font">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>150</y>
+          <width>81</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>检测结果字体</string>
+        </property>
+       </widget>
+       <widget class="QLabel" name="label_font_size">
+        <property name="geometry">
+         <rect>
+          <x>60</x>
+          <y>250</y>
+          <width>54</width>
+          <height>16</height>
+         </rect>
+        </property>
+        <property name="text">
+         <string>0</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignCenter</set>
+        </property>
+       </widget>
+       <widget class="QGroupBox" name="groupBox_detect_picture">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>280</y>
+          <width>120</width>
+          <height>101</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>检测图片</string>
+        </property>
+        <widget class="QPushButton" name="pushButton_select_picture">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>20</y>
+           <width>75</width>
+           <height>24</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>选择图片</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pushButton_detect_picture">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>60</y>
+           <width>75</width>
+           <height>24</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>检测图片</string>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QGroupBox" name="groupBox_detect_video">
+        <property name="geometry">
+         <rect>
+          <x>10</x>
+          <y>390</y>
+          <width>120</width>
+          <height>171</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>检测视频</string>
+        </property>
+        <widget class="QPushButton" name="pushButton_select_video">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>30</y>
+           <width>75</width>
+           <height>24</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>选择视频</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pushButton_detect_video">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>80</y>
+           <width>75</width>
+           <height>24</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>检测视频</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pushButton_stop_display">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>130</y>
+           <width>75</width>
+           <height>24</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>停止视频</string>
+         </property>
+        </widget>
+       </widget>
+       <widget class="QGroupBox" name="groupBox_control_camera">
+        <property name="geometry">
+         <rect>
+          <x>140</x>
+          <y>340</y>
+          <width>120</width>
+          <height>121</height>
+         </rect>
+        </property>
+        <property name="title">
+         <string>开关摄像头</string>
+        </property>
+        <widget class="QPushButton" name="pushButton_open_camera">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>30</y>
+           <width>75</width>
+           <height>24</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>开启摄像头</string>
+         </property>
+        </widget>
+        <widget class="QPushButton" name="pushButton_close_camera">
+         <property name="geometry">
+          <rect>
+           <x>20</x>
+           <y>70</y>
+           <width>75</width>
+           <height>24</height>
+          </rect>
+         </property>
+         <property name="text">
+          <string>关闭摄像头</string>
+         </property>
+        </widget>
+       </widget>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+   <widget class="QWidget" name="horizontalLayoutWidget">
+    <property name="geometry">
+     <rect>
+      <x>299</x>
+      <y>10</y>
+      <width>491</width>
+      <height>541</height>
+     </rect>
+    </property>
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QOpenGLWidget" name="openGLWidget">
+       <property name="autoFillBackground">
+        <bool>false</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </widget>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>22</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

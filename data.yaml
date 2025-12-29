@@ -1,0 +1,7 @@
+path: D:\\fly\\fly_dl\\video_process\\images\augmented      # dataset根目录
+train: D:\\fly\\fly_dl\\video_process\\images\\train        # 训练集目录
+val: D:\\fly\\fly_dl\\video_process\\images\\val            #测试集目录
+nc: 1       # 类别数
+# Classes 类别信息
+names:
+  0: fly
