@@ -3,7 +3,7 @@ import csv
 import math
 import cv2
 import numpy as np
-from collections import defaultdict, deque
+from collections import defaultdict
 import random
 from ultralytics import YOLO
 import torch

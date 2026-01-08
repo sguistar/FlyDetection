@@ -2,7 +2,7 @@
 from ultralytics import YOLO, download
 
 data_yaml_path = r"data.yaml"
-train_model_name = r"best.pt"
+train_model_name = r"best1.pt"
 
 if __name__ == "__main__":
     model = YOLO(train_model_name)

@@ -2,7 +2,7 @@
 from ultralytics import YOLO
 
 data_yaml_path = r"data.yaml"
-pre_model_name = r"D:\fly_mark\runs\detect\train2\weights\best.pt"
+pre_model_name = "best1.pt"
 
 if __name__ == "__main__":
     model = YOLO(pre_model_name)
