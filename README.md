@@ -15,7 +15,7 @@ Offline fly detection, re-identification, and annotation workflow powered by a Y
 
 ## Requirements
 
-- Python 3.9+
+- Python 3.10+
 - A trained YOLO model checkpoint (e.g., `best.pt`).
 - A video file to analyze.
 
