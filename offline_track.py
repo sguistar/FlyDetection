@@ -11,18 +11,20 @@ from scipy.optimize import linear_sum_assignment #匈牙利匹配算法
 
 # ------------------ CONFIG ------------------
 
+#Please replace paths below with your paths
+
 # 模型 & 视频
-MODEL_PATH = r"D:\fly\best.pt"
-VIDEO_PATH = r"C:\Users\seanl\Desktop\fruit fly\w1118_motor\w_10.mp4"
+MODEL_PATH = r"best.pt"
+VIDEO_PATH = r"your video.mp4"
 
 # 输出文件
-RAW_CSV_PATH = r"D:\fly\coords\output_tracks_w10.csv"              # 纯 YOLO 检测
-REID_CSV_PATH = r"D:\fly\coords\output_tracks_reid_w10.csv"        # 离线重标号后的“纯净 ID”轨迹
-INTERP_CSV_PATH = r"D:\fly\coords\output_tracks_reid_interp_w10.csv"  # 插值后的轨迹
-OUTPUT_VIDEO_PATH = r"D:\fly\coords\result_w10.mp4" # 使用 re-ID 的标注视频
+RAW_CSV_PATH = r"raw.csv"              # 纯 YOLO 检测
+REID_CSV_PATH = r"reid.csv"        # 离线重标号后的ID轨迹
+INTERP_CSV_PATH = r"interpolate.csv"  # 插值后的轨迹
+OUTPUT_VIDEO_PATH = r"result.mp4" # 使用 re-ID 的标注视频
 
 # 行为开关
-USE_EXISTING_RAW_CSV = False  # 若已有 RAW_CSV_PATH，可跳过检测，只做 re-ID + 视频渲染
+USE_EXISTING_RAW_CSV = False   # 若已有 RAW_CSV_PATH，可跳过检测，只做 re-ID + 视频渲染
 OVERWRITE_RAW_CSV = True       # 若 RAW_CSV_PATH 已存在，是否覆盖
 DO_INTERP_CSV = True           # 是否生成插值后的轨迹 CSV
 
@@ -31,7 +33,7 @@ DISPLAY_WINDOW = False         # 是否实时显示窗口（调试用）
 
 # YOLO 检测参数（只对 predict 生效）
 CONF = 0.15
-IOU = 0.6           # 这里是 NMS 的 IOU 阈值，不再是 tracker 的
+IOU = 0.6           # NMS 的 IOU 阈值
 IMG_SIZE = 1280
 AGNOSTIC_NMS = False  # 单类检测通常不需要 true
 
@@ -39,7 +41,7 @@ AGNOSTIC_NMS = False  # 单类检测通常不需要 true
 USE_GPU = True       # 有 GPU 就用
 HALF_PRECISION = True  # 在 GPU 上用 half 推理
 
-# re-ID 参数（核心）
+# re-ID 核心参数
 NUM_FLIES = 10       # 视频中果蝇数量
 MAX_MOVE = 1000.0      # 相邻帧同一果蝇最大位移（像素）；根据实际帧率和速度微调
 
@@ -153,14 +155,14 @@ def run_and_save(device, fps, frame_w, frame_h, total_frames):
         res = results[0]
         if res.boxes is not None and len(res.boxes) > 0:
             boxes = res.boxes.xyxy.cpu().numpy()  # (N, 4)
-            # 如果你未来要用置信度，这里可以拿：res.boxes.conf.cpu().numpy()
+            # 置信度可以拿 res.boxes.conf.cpu().numpy()
             for det_id, box in enumerate(boxes):
                 x1, y1, x2, y2 = map(float, box)
                 cx = (x1 + x2) / 2.0
                 cy = (y1 + y2) / 2.0
 
                 detections_by_frame[frame_idx].append((cx, cy))
-                # orig_id 这里就记当前帧内的检测序号 det_id，主要是给你调试参考
+                # orig_id 这里就记当前帧内的检测序号 det_id，主要是给调试做参考
                 raw_writer.writerow([frame_idx, det_id, cx, cy])
 
         # else: 当前帧无检测，空列表
@@ -175,7 +177,7 @@ def run_and_save(device, fps, frame_w, frame_h, total_frames):
     return detections_by_frame
 
 
-# ---------- Phase 2: 离线 re-ID（严格版） ----------
+# ---------- Phase 2: 严格离线 re-ID ----------
 
 def run_reid(detections_by_frame):
     """
@@ -284,8 +286,8 @@ def run_reid(detections_by_frame):
 def interpolate_and_save(tracks):
     """
     对每条轨迹在 [first_frame, last_frame] 范围内做简单线性插值，
-    生成一个更“密集”的轨迹 CSV。
-    本函数不会强行补出全帧里的每一只果蝇，只是填补中间缺失的帧。
+    生成一个更密集的轨迹 CSV。
+    本函数不会强行补出全部帧里的每一只果蝇，只是填补中间缺失的帧。
     """
     print("Phase 2.5: Generating interpolated tracks CSV...")
 
@@ -433,7 +435,7 @@ def render_with_reid(tracks, fps, frame_w, frame_h, total_frames):
 def main():
     ensure_dirs()
 
-    # 先获取视频基本信息
+    # 获取视频基本信息
     cap = cv2.VideoCapture(VIDEO_PATH)
     if not cap.isOpened():
         raise RuntimeError(f"Cannot open video: {VIDEO_PATH}")
