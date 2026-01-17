@@ -12,25 +12,25 @@ from scipy.optimize import linear_sum_assignment #匈牙利匹配算法
 # ------------------ CONFIG ------------------
 
 # 模型 & 视频
-MODEL_PATH = r"D:\fly\fly_dl\model\weights\best.pt"
-VIDEO_PATH = r"D:\fly\fly_dl\test\C-S attack-4.mp4"
+MODEL_PATH = r"D:\fly\best.pt"
+VIDEO_PATH = r"C:\Users\seanl\Desktop\fruit fly\w1118_motor\w_10.mp4"
 
 # 输出文件
-RAW_CSV_PATH = r"D:\fly\coords\output_tracks.csv"              # 原始检测（纯 YOLO 检测）
-REID_CSV_PATH = r"D:\fly\coords\output_tracks_reid.csv"        # 离线重标号后的“纯净 ID”轨迹
-INTERP_CSV_PATH = r"D:\fly\coords\output_tracks_reid_interp.csv"  # 插值后的轨迹
-OUTPUT_VIDEO_PATH = r"D:\fly\coords\result4_p.mp4" # 使用 re-ID 的标注视频
+RAW_CSV_PATH = r"D:\fly\coords\output_tracks_w10.csv"              # 纯 YOLO 检测
+REID_CSV_PATH = r"D:\fly\coords\output_tracks_reid_w10.csv"        # 离线重标号后的“纯净 ID”轨迹
+INTERP_CSV_PATH = r"D:\fly\coords\output_tracks_reid_interp_w10.csv"  # 插值后的轨迹
+OUTPUT_VIDEO_PATH = r"D:\fly\coords\result_w10.mp4" # 使用 re-ID 的标注视频
 
 # 行为开关
-USE_EXISTING_RAW_CSV = True  # 若已有 RAW_CSV_PATH，可跳过检测，只做 re-ID + 视频渲染
-OVERWRITE_RAW_CSV = False       # 若 RAW_CSV_PATH 已存在，是否覆盖
-DO_INTERP_CSV = False           # 是否生成插值后的轨迹 CSV
+USE_EXISTING_RAW_CSV = False  # 若已有 RAW_CSV_PATH，可跳过检测，只做 re-ID + 视频渲染
+OVERWRITE_RAW_CSV = True       # 若 RAW_CSV_PATH 已存在，是否覆盖
+DO_INTERP_CSV = True           # 是否生成插值后的轨迹 CSV
 
 TRAIL_LEN = 30                 # 视频渲染时，轨迹尾巴长度
 DISPLAY_WINDOW = False         # 是否实时显示窗口（调试用）
 
 # YOLO 检测参数（只对 predict 生效）
-CONF = 0.1
+CONF = 0.15
 IOU = 0.6           # 这里是 NMS 的 IOU 阈值，不再是 tracker 的
 IMG_SIZE = 1280
 AGNOSTIC_NMS = False  # 单类检测通常不需要 true
@@ -40,8 +40,8 @@ USE_GPU = True       # 有 GPU 就用
 HALF_PRECISION = True  # 在 GPU 上用 half 推理
 
 # re-ID 参数（核心）
-NUM_FLIES = 19       # 视频中果蝇数量
-MAX_MOVE = 1000.0      # 相邻帧同一果蝇最大位移（像素）；根据实际帧率/速度微调
+NUM_FLIES = 10       # 视频中果蝇数量
+MAX_MOVE = 1000.0      # 相邻帧同一果蝇最大位移（像素）；根据实际帧率和速度微调
 
 # 轨迹渲染时清理长时间未出现的轨迹
 MAX_MISS_FRAMES = 30
@@ -99,7 +99,7 @@ def load_raw_csv(path):
 
 def run_and_save(device, fps, frame_w, frame_h, total_frames):
     """
-    使用 YOLO.predict 做纯检测（不再使用 ByteTrack）
+    使用 YOLO.predict 做纯检测（不使用 ByteTrack）
     返回:
       detections_by_frame: frame -> list[(x,y)]
     同时写出 RAW_CSV_PATH:
@@ -190,7 +190,7 @@ def run_reid(detections_by_frame):
     if not all_frames:
         raise RuntimeError("No detections found for re-ID.")
 
-    # 2.1 选择起始帧: 找到第一个检测数 >= NUM_FLIES 的帧（严格限制版）
+    # 2.1 选择起始帧: 找到第一个检测数 >= NUM_FLIES 的帧
     start_frame = None
     for fr in all_frames:
         if len(detections_by_frame[fr]) >= NUM_FLIES:
@@ -207,40 +207,46 @@ def run_reid(detections_by_frame):
 
     # 2.2 初始化轨迹：一帧上直接定死 NUM_FLIES 个 ID
     tracks = {i: [] for i in range(NUM_FLIES)}  # id -> [(frame, x, y)]
-    last_pos = {}  # id -> (x, y)
-    prev_pos = {}  # id -> (x, y)  上一帧的“已匹配位置”（用于速度预测）
+    last_pos = {}  # id -> (x, y) 当前最新位置
+    prev_pos = {}  # id -> (x, y) 上一次位置（用于速度预测）
 
     start_dets = detections_by_frame[start_frame]
-    # 只取前 NUM_FLIES 个点赋初始 id
     for i in range(NUM_FLIES):
         x, y = start_dets[i]
         tracks[i].append((start_frame, x, y))
-        prev_pos[i] = last_pos.get(i,None)
+        prev_pos[i] = None            # 关键修复：起始时没有 prev
         last_pos[i] = (x, y)
 
     # 2.3 对后续帧做匈牙利匹配
+    BIG = 1e6
     for frame in all_frames:
         if frame <= start_frame:
             continue
+
         dets = detections_by_frame[frame]
         if not dets:
             continue
 
         M = len(dets)
         N = NUM_FLIES
-        BIG = 1e6
 
+        # cost: (N x M)
         cost = [[BIG] * M for _ in range(N)]
+
         for i in range(N):
             if i not in last_pos:
                 continue
+
             lx, ly = last_pos[i]
+
+            # 速度预测：pred = last + (last - prev)
             if prev_pos.get(i) is not None:
                 px, py = prev_pos[i]
                 predx = lx + (lx - px)
                 predy = ly + (ly - py)
             else:
                 predx, predy = lx, ly
+
             for j, (x, y) in enumerate(dets):
                 dist = math.hypot(x - predx, y - predy)
                 if dist <= MAX_MOVE:
@@ -248,21 +254,26 @@ def run_reid(detections_by_frame):
 
         row_ind, col_ind = linear_sum_assignment(cost)
 
+        # 只更新匹配到的 pair；未匹配到的 ID 就当该帧缺失
         for i, j in zip(row_ind, col_ind):
             if cost[i][j] >= BIG:
-                # 不合理匹配，认为该帧该 id 缺失
                 continue
+
             x, y = dets[j]
-            tracks[i].append((frame, x, y))
+
+            # 关键修复：先把旧 last_pos 存到 prev_pos，再更新 last_pos
+            prev_pos[i] = last_pos.get(i, None)
             last_pos[i] = (x, y)
+
+            tracks[i].append((frame, x, y))
 
     # 写回 re-ID CSV
     with open(REID_CSV_PATH, "w", newline="") as f:
         writer = csv.writer(f)
         writer.writerow(["frame", "id", "x", "y"])
         for tid, pts in tracks.items():
-            for frame, x, y in pts:
-                writer.writerow([frame, tid, x, y])
+            for fr, x, y in pts:
+                writer.writerow([fr, tid, x, y])
 
     print("Phase 2 done. Re-ID CSV saved to:", REID_CSV_PATH)
     return tracks
@@ -274,7 +285,7 @@ def interpolate_and_save(tracks):
     """
     对每条轨迹在 [first_frame, last_frame] 范围内做简单线性插值，
     生成一个更“密集”的轨迹 CSV。
-    本函数不会强行补出“全帧全19只”，只是填补中间缺失的帧。
+    本函数不会强行补出全帧里的每一只果蝇，只是填补中间缺失的帧。
     """
     print("Phase 2.5: Generating interpolated tracks CSV...")
 
