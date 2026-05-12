@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="zh-CN" data-theme="microscope-dark">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      http-equiv="Content-Security-Policy"
+      content="default-src 'self' file:; script-src 'self'; style-src 'self' 'unsafe-inline'; media-src 'self' file:; img-src 'self' file: data:;"
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>果蝇多目标跟踪本地控制台</title>
+    <link rel="stylesheet" href="../web/static/styles.css" />
+    <link rel="stylesheet" href="./local.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <div class="brand">
+          <span class="brand-mark" aria-hidden="true"></span>
+          <div>
+            <p class="eyebrow">Fly MOT Desktop Console</p>
+            <h1>果蝇多目标跟踪本地控制台</h1>
+          </div>
+        </div>
+        <div class="topbar-actions">
+          <div class="theme-switch" role="group" aria-label="主题切换">
+            <button type="button" data-theme-choice="microscope-dark" aria-pressed="true">显微</button>
+            <button type="button" data-theme-choice="lab-light" aria-pressed="false">明亮</button>
+            <button type="button" data-theme-choice="contrast" aria-pressed="false">高对比</button>
+          </div>
+          <div class="status-pill" id="statusPill">
+            <span class="status-dot" aria-hidden="true"></span>
+            <span id="statusText">待命</span>
+          </div>
+        </div>
+      </header>
+
+      <main class="workbench">
+        <aside class="control-rail" aria-label="运行参数">
+          <form id="jobForm" class="control-form">
+            <section class="rail-section">
+              <h2>输入</h2>
+              <label class="field">
+                <span>视频文件</span>
+                <select name="video_choice" id="videoSelect"></select>
+              </label>
+              <button class="file-drop local-picker" id="pickVideo" type="button">
+                <span id="pickedVideoLabel">选择外部视频</span>
+              </button>
+              <label class="field">
+                <span>模型权重</span>
+                <select name="model_path" id="modelSelect"></select>
+              </label>
+              <label class="field">
+                <span>GT 标注</span>
+                <select name="gt_csv_path" id="gtSelect"></select>
+              </label>
+            </section>
+
+            <section class="rail-section">
+              <h2>检测</h2>
+              <label class="field range-field">
+                <span>置信度 <strong id="confValue">0.050</strong></span>
+                <input name="conf_thres" id="confInput" type="range" min="0.001" max="0.5" step="0.001" value="0.05" />
+              </label>
+              <label class="field range-field">
+                <span>IoU <strong id="iouValue">0.80</strong></span>
+                <input name="iou_thres" id="iouInput" type="range" min="0.1" max="0.95" step="0.01" value="0.8" />
+              </label>
+              <div class="field-grid">
+                <label class="field">
+                  <span>图像尺寸</span>
+                  <input name="imgsz" type="number" min="320" max="4096" step="32" value="2560" />
+                </label>
+                <label class="field">
+                  <span>最大检测</span>
+                  <input name="max_det" type="number" min="1" max="256" value="32" />
+                </label>
+              </div>
+            </section>
+
+            <section class="rail-section">
+              <h2>跟踪</h2>
+              <div class="field-grid">
+                <label class="field">
+                  <span>果蝇数量</span>
+                  <input name="num_flies" type="number" min="1" max="64" value="6" />
+                </label>
+                <label class="field">
+                  <span>ID 槽位</span>
+                  <input name="identity_slots" type="number" min="1" max="64" value="6" />
+                </label>
+              </div>
+              <label class="field">
+                <span>最大帧数</span>
+                <input name="max_frames" type="number" min="1" placeholder="完整视频" />
+              </label>
+              <div class="toggle-grid">
+                <label class="toggle">
+                  <input name="use_cuda" type="checkbox" checked />
+                  <span>CUDA</span>
+                </label>
+                <label class="toggle">
+                  <input name="half_precision" type="checkbox" checked />
+                  <span>半精度</span>
+                </label>
+                <label class="toggle">
+                  <input name="save_video" type="checkbox" checked />
+                  <span>渲染视频</span>
+                </label>
+                <label class="toggle">
+                  <input name="evaluation_enabled" type="checkbox" checked />
+                  <span>评估</span>
+                </label>
+              </div>
+            </section>
+
+            <section class="rail-section">
+              <h2>显示</h2>
+              <label class="field range-field">
+                <span>轨迹长度 <strong id="trailValue">24</strong></span>
+                <input name="trail_len" id="trailInput" type="range" min="0" max="120" step="1" value="24" />
+              </label>
+              <label class="toggle">
+                <input name="draw_labels" type="checkbox" checked />
+                <span>绘制标签</span>
+              </label>
+            </section>
+
+            <div class="run-actions">
+              <button class="primary-action" id="startButton" type="submit">
+                <span class="button-glyph" aria-hidden="true"></span>
+                启动跟踪
+              </button>
+              <button class="ghost-action" id="cancelButton" type="button" disabled>停止</button>
+            </div>
+          </form>
+        </aside>
+
+        <section class="stage">
+          <div class="stage-header">
+            <div>
+              <p class="eyebrow">Local Run Surface</p>
+              <h2 id="stageTitle">等待任务</h2>
+            </div>
+            <div class="progress-cluster">
+              <span id="frameCounter">0 / 0</span>
+              <div class="progress-track" aria-label="任务进度">
+                <span id="progressBar"></span>
+              </div>
+            </div>
+          </div>
+
+          <div class="visual-split">
+            <div class="video-pane">
+              <video id="resultVideo" controls preload="metadata"></video>
+              <div class="empty-visual" id="videoEmpty">
+                <span></span>
+                <p>结果视频将在任务完成后显示</p>
+              </div>
+            </div>
+            <div class="trajectory-pane">
+              <div id="trajectoryStage"></div>
+              <div class="trajectory-toolbar">
+                <label>
+                  <span>采样</span>
+                  <select id="trackStride">
+                    <option value="1">1x</option>
+                    <option value="2">2x</option>
+                    <option value="5" selected>5x</option>
+                    <option value="10">10x</option>
+                  </select>
+                </label>
+                <button type="button" id="reloadTracks">刷新轨迹</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="log-dock">
+            <div class="dock-title">
+              <span>运行日志</span>
+              <button type="button" id="copyJobId">复制任务 ID</button>
+            </div>
+            <pre id="logOutput"></pre>
+          </div>
+        </section>
+
+        <aside class="inspector" aria-label="结果摘要">
+          <section class="inspector-section metric-band">
+            <h2>指标</h2>
+            <div id="metricsGrid" class="metrics-grid"></div>
+          </section>
+          <section class="inspector-section">
+            <h2>事件</h2>
+            <div id="eventList" class="event-list"></div>
+          </section>
+          <section class="inspector-section">
+            <h2>文件</h2>
+            <div id="artifactList" class="artifact-list"></div>
+          </section>
+        </aside>
+      </main>
+    </div>
+
+    <script type="module" src="./renderer.js"></script>
+  </body>
+</html>

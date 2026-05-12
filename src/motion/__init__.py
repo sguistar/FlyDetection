@@ -1,0 +1,2 @@
+from .kalman_filter import SimpleKalmanFilter
+from .kinematics import velocity_from_history, acceleration_from_history, direction_from_history

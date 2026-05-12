@@ -1,0 +1,25 @@
+.local-picker {
+  width: 100%;
+  font-weight: 700;
+}
+
+.artifact-row button {
+  width: fit-content;
+  min-height: 28px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  color: var(--text);
+  background: var(--surface-soft);
+  padding: 0 10px;
+}
+
+.artifact-row button:hover {
+  border-color: var(--line-strong);
+  background: color-mix(in srgb, var(--accent) 16%, transparent);
+}
+
+.event-row.is-muted,
+.artifact-row.is-muted {
+  border-left-color: var(--faint);
+  opacity: .82;
+}
