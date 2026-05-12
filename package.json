@@ -1,0 +1,12 @@
+{
+  "name": "fly-mot-local-gui",
+  "private": true,
+  "description": "Electron desktop GUI for the Fly MOT local pipeline.",
+  "scripts": {
+    "local-gui": "electron src/local_gui/main.js",
+    "check:local-gui": "node --check src/local_gui/main.js && node --check src/local_gui/preload.js && node --check src/local_gui/renderer.js"
+  },
+  "devDependencies": {
+    "electron": "latest"
+  }
+}
