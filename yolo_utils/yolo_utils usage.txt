@@ -1,0 +1,1 @@
+使用前如果想测试GPU，请运行cuda_test.py；video_cut.py为视频裁剪脚本，可以在终端输入python video_cut.py input.mp4 output.mp4 --start 00:01:20 --end 00:02:10或者python video_cut.py input.mp4 output.mp4 --start 80 --end 130来裁剪视频用于系统分析(80s-130s)
